@@ -15,7 +15,6 @@ namespace NoServerLimit
         public string Contact => "ciastexx@live.com";
         public int CompatibleAPILevel => 1;
 
-        private bool _wasAlreadyInitialized;
         private Settings _settings;
 
         public void Initialize(IManager manager)
@@ -25,72 +24,78 @@ namespace NoServerLimit
 
             MainMenu.Loaded += (sender, args) =>
             {
-                if (!_wasAlreadyInitialized)
+                var mainMenuObject = GameObject.Find("MainMenuFrontRoot");
+                var mainMenuLogic = mainMenuObject?.GetComponent<MainMenuLogic>();
+                var hostAGame = mainMenuLogic?.onlineMenuLogic_.hostAGamePanel_.GetComponent<HostAGame>();
+
+                // most likely returned back to lobby from gamemode
+                if (hostAGame == null)
                 {
-                    var mainMenuObject = GameObject.Find("MainMenuFrontRoot");
-                    var mainMenuLogic = mainMenuObject?.GetComponent<MainMenuLogic>();
-                    var hostAGame = mainMenuLogic?.onlineMenuLogic_.hostAGamePanel_.GetComponent<HostAGame>();
+                    Console.WriteLine("Server Limit Unlocker: Not from main menu, trying fallback.");
 
-                    var serverButton = hostAGame?.gameObject.transform.Find("Anchor - Center/UI Panel - Host a Game/StartServerButton");
-                    var serverButtonEx = serverButton?.GetComponents<UIExButton>();
+                    var onlineMpPanel = GameObject.Find("OnlineMPFrontRoot");
+                    var onlineMenuLogic = onlineMpPanel.GetComponent<OnlineMenuLogic>();
 
-                    var maxPlayersNote = hostAGame?.gameObject.transform.Find("Anchor - Center/UI Panel - Host a Game/MaxPlayersNote");
-                    var maxPlayersNoteLabel = maxPlayersNote?.GetComponent<UILabel>();
+                    hostAGame = onlineMenuLogic?.hostAGamePanel_.GetComponent<HostAGame>();
+                }
 
-                    if (maxPlayersNoteLabel != null)
+                var serverButton = hostAGame?.gameObject.transform.Find("Anchor - Center/UI Panel - Host a Game/StartServerButton");
+                var serverButtonEx = serverButton?.GetComponents<UIExButton>();
+
+                var maxPlayersNote = hostAGame?.gameObject.transform.Find("Anchor - Center/UI Panel - Host a Game/MaxPlayersNote");
+                var maxPlayersNoteLabel = maxPlayersNote?.GetComponent<UILabel>();
+
+                if (maxPlayersNoteLabel != null)
+                {
+                    maxPlayersNoteLabel.text = $"limited to 2-{_settings["MaxPlayerCount"]}";
+                }
+
+                if (hostAGame != null)
+                {
+                    var properInput = hostAGame.maxPlayersInput_ as UIExInputGeneric<string>;
+                    properInput?.onFinish_.Clear();
+
+                    properInput?.onFinish_.Add(new EventDelegate(() =>
                     {
-                        maxPlayersNoteLabel.text = $"limited to 2-{_settings["MaxPlayerCount"]}";
-                    }
-
-                    if (hostAGame != null)
-                    {
-                        var properInput = hostAGame.maxPlayersInput_ as UIExInputGeneric<string>;
-                        properInput?.onFinish_.Clear();
-
-                        properInput?.onFinish_.Add(new EventDelegate(() =>
+                        int value;
+                        if (!int.TryParse(properInput.value, out value))
                         {
-                            int value;
-                            if (!int.TryParse(properInput.value, out value))
-                            {
-                                properInput.value = "2";
-                                return;
-                            }
+                            properInput.value = "2";
+                            return;
+                        }
 
-                            if (value > _settings.GetValue<int>("MaxPlayerCount"))
-                            {
-                                properInput.value = _settings["MaxPlayerCount"];
-                                return;
-                            }
+                        if (value > _settings.GetValue<int>("MaxPlayerCount"))
+                        {
+                            properInput.value = _settings["MaxPlayerCount"];
+                            return;
+                        }
 
-                            if (value < 2)
-                            {
-                                properInput.value = "2";
-                            }
+                        if (value < 2)
+                        {
+                            properInput.value = "2";
+                        }
+                    }));
+                }
+                else
+                {
+                    Console.WriteLine("Server Limit Unlocker: Couldn't get HostAGame component.");
+                    return;
+                }
+
+                if (serverButtonEx != null)
+                {
+                    foreach (var button in serverButtonEx)
+                    {
+                        button.onClick.Clear();
+                        button.onClick.Add(new EventDelegate(() =>
+                        {
+                            Server.Create(hostAGame.serverNameInput_.value, hostAGame.passwordInput_.value, int.Parse(hostAGame.maxPlayersInput_.value));
                         }));
                     }
-                    else
-                    {
-                        Console.WriteLine("Server Limit Unlocker: Couldn't get HostAGame component.");
-                        return;
-                    }
-
-                    if (serverButtonEx != null)
-                    {
-                        foreach (var button in serverButtonEx)
-                        {
-                            button.onClick.Clear();
-                            button.onClick.Add(new EventDelegate(() =>
-                            {
-                                Server.Create(hostAGame.serverNameInput_.value, hostAGame.passwordInput_.value, int.Parse(hostAGame.maxPlayersInput_.value));
-                            }));
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Server Limit Unlocker: Couldn't get ServerButtonEx component list.");
-                        return;
-                    }
-                    _wasAlreadyInitialized = true;
+                }
+                else
+                {
+                    Console.WriteLine("Server Limit Unlocker: Couldn't get ServerButtonEx component list.");
                 }
             };
         }
