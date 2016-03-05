@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevelopmentUtilities", "Dev
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoServerLimit", "NoServerLimit\NoServerLimit.csproj", "{FEAE41F2-C17F-4742-A4A3-860B0818DC97}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SplitTimes", "SplitTimes\SplitTimes.csproj", "{B24CD7FD-67B0-4B3B-9770-F760A336C418}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{FEAE41F2-C17F-4742-A4A3-860B0818DC97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FEAE41F2-C17F-4742-A4A3-860B0818DC97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FEAE41F2-C17F-4742-A4A3-860B0818DC97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B24CD7FD-67B0-4B3B-9770-F760A336C418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B24CD7FD-67B0-4B3B-9770-F760A336C418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B24CD7FD-67B0-4B3B-9770-F760A336C418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B24CD7FD-67B0-4B3B-9770-F760A336C418}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
