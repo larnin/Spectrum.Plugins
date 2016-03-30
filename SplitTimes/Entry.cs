@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Timers;
 using Spectrum.API.Game;
 using Spectrum.API.Interfaces.Plugins;
 using Spectrum.API.Interfaces.Systems;
@@ -46,7 +42,7 @@ namespace SplitTimes
             }
             _previousCheckpointTime = _currentCheckpointTime;
 
-            Vehicle.SetTimeBarText($"{timeBetweenCheckpoints.Minutes.ToString("D2")}:{timeBetweenCheckpoints.Seconds.ToString("D2")}.{timeBetweenCheckpoints.Milliseconds.ToString("D4")}", "#0FA6D9", 2.0f);
+            Vehicle.SetTimeBarText($"{timeBetweenCheckpoints.Minutes:D2}:{timeBetweenCheckpoints.Seconds:D2}.{timeBetweenCheckpoints.Milliseconds:D4}", "#0FA6D9", 2.0f);
         }
 
         public void Shutdown()

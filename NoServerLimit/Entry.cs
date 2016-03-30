@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Spectrum.API.Configuration;
 using Spectrum.API.Game;
 using Spectrum.API.Game.Network;
