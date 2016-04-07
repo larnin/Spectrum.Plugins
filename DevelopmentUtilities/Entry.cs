@@ -1,4 +1,5 @@
-﻿using DevelopmentUtilities.Utilities;
+using DevelopmentUtilities.Utilities;
+using Spectrum.API;
 using Spectrum.API.Configuration;
 using Spectrum.API.FileSystem;
 using Spectrum.API.Interfaces.Plugins;
@@ -11,7 +12,7 @@ namespace DevelopmentUtilities
         public string FriendlyName => "Development Utilities";
         public string Author => "Ciastex";
         public string Contact => "ciastexx@live.com";
-        public int CompatibleAPILevel => 1;
+        public APILevel CompatibleAPILevel => APILevel.RadioWave;
 
         private PluginData PluginData { get; set; }
         private Settings Settings { get; set; }

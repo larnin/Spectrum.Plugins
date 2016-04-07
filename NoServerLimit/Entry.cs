@@ -1,4 +1,5 @@
 using System;
+using Spectrum.API;
 using Spectrum.API.Configuration;
 using Spectrum.API.Game;
 using Spectrum.API.Game.Network;
@@ -13,7 +14,7 @@ namespace NoServerLimit
         public string FriendlyName => "Server Limit Unlocker";
         public string Author => "Ciastex";
         public string Contact => "ciastexx@live.com";
-        public int CompatibleAPILevel => 1;
+        public APILevel CompatibleAPILevel => APILevel.RadioWave;
 
         private Settings _settings;
 
