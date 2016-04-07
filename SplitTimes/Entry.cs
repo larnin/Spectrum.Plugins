@@ -43,7 +43,7 @@ namespace SplitTimes
 
             StringBuilder times = new StringBuilder();
             times.Append("<size=50></size>");
-            times.Append("<size=55><color=#6be584ff>Regenerating</color></size>");
+            times.Append("<size=57><color=#6be584ff>Regenerating</color></size>");
             times.AppendLine();
 
             for (int i = _previousCheckpointTimes.Count - 1; i > 0; i--){
