@@ -32,17 +32,13 @@ namespace SplitTimes
 
         private void Vehicle_CheckpointPassed(object sender, EventArgs e)
         {
-            TimeSpan now = Race.Elapsed();
-
-            if (now == TimeSpan.Zero)
-                return;
+            var now = Race.Elapsed();
 
             _previousCheckpointTimes.Add(now);
 
             LocalVehicle.Screen.SetTimeBarText($"{now.Minutes:D2}:{now.Seconds:D2}:{now.Milliseconds.ToString("D2").Substring(0, 2)}", "#0FA6D9", 1.25f);
 
-            StringBuilder times = new StringBuilder();
-            times.Append("<size=50></size>");
+            var times = new StringBuilder();
             times.Append("<size=57><color=#6be584ff>Regenerating</color></size>");
             times.AppendLine();
 
@@ -52,9 +48,9 @@ namespace SplitTimes
                 times.Append($"  ");
 
                 now -= _previousCheckpointTimes[i - 1];
-                times.Append($"<size=50>{now.Minutes:D2}:{now.Seconds:D2}.{now.Milliseconds.ToString("D3").Substring(0, 3)}</size>");
+                times.Append($"{now.Minutes:D2}:{now.Seconds:D2}.{now.Milliseconds.ToString("D3").Substring(0, 3)}");
                 times.AppendLine();
-                times.Insert(9, Environment.NewLine); // 9 is the amount of characters in the first open size tag
+                times.Insert(0, Environment.NewLine);
             }
 
             LocalVehicle.HUD.Clear();
