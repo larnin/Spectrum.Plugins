@@ -12,9 +12,9 @@ namespace SplitTimes
     public class Entry : IPlugin
     {
         public string FriendlyName => "Split times";
-        public string Author => "Ciastex";
-        public string Contact => "ciastexx@live.com";
-        public APILevel CompatibleAPILevel => APILevel.RadioWave;
+        public string Author => "Jonathan Vollebregt";
+        public string Contact => "jnvsor@gmail.com";
+        public APILevel CompatibleAPILevel => APILevel.MicroWave;
 
         private readonly List<TimeSpan> _previousCheckpointTimes = new List<TimeSpan>();
 
