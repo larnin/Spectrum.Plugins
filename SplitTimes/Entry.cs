@@ -45,6 +45,8 @@ namespace SplitTimes
         private void Race_Started(object sender, EventArgs e)
         {
             _previousCheckpointTimes.Clear();
+            _bestCheckpointTimes = new Dictionary<int, SplitTime>();
+            _bestTime = TimeSpan.Zero;
 
             if (Settings["SaveTimes"] == "true" && G.Sys.GameManager_.Mode_.GameModeID_ == GameModeID.Sprint)
             {
@@ -56,8 +58,6 @@ namespace SplitTimes
                 if (_bestCheckpointTimes.ContainsKey(-1))
                     _bestTime = _bestCheckpointTimes[-1].Total;
             }
-            else
-                _bestCheckpointTimes = new Dictionary<int, SplitTime>();
         }
 
         private void LocalVehicle_Finished(object sender, FinishedEventArgs e)
