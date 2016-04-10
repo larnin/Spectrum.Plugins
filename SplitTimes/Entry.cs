@@ -48,10 +48,13 @@ namespace SplitTimes
             _bestCheckpointTimes = new Dictionary<int, SplitTime>();
             _bestTime = TimeSpan.Zero;
 
-            if (Settings["SaveTimes"] == "true" && G.Sys.GameManager_.Mode_.GameModeID_ == GameModeID.Sprint)
+            if (Settings["SaveTimes"] == "true")
             {
                 _trackFolder = Path.Combine(
-                    Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_, "_"),
+                    Path.Combine(
+                        Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_, "_"),
+                        Resource.GetValidFileNameToLower(G.Sys.GameManager_.Mode_.GameModeID_.ToString(), "_")
+                    ),
                     Resource.GetValidFileNameToLower(G.Sys.GameManager_.Level_.Name_, "_")
                 );
                 _bestCheckpointTimes = ReadTimes("pb.txt");
@@ -68,7 +71,7 @@ namespace SplitTimes
             var finished = new SplitTime(_previousCheckpointTimes.LastOrDefault(), TimeSpan.FromMilliseconds(e.FinalTime), -1);
             _previousCheckpointTimes.Add(finished);
 
-            if (Settings["SaveTimes"] == "true" && G.Sys.GameManager_.Mode_.GameModeID_ == GameModeID.Sprint)
+            if (Settings["SaveTimes"] == "true")
             {
                 if (_bestTime == TimeSpan.Zero || finished.Total < _bestTime)
                     WriteTimes("pb.txt");
