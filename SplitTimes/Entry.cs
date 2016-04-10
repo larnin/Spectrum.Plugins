@@ -51,12 +51,11 @@ namespace SplitTimes
             if (Settings["SaveTimes"] == "true")
             {
                 _trackFolder = Path.Combine(
-                    Path.Combine(
-                        Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_, "_"),
-                        Resource.GetValidFileNameToLower(G.Sys.GameManager_.Mode_.GameModeID_.ToString(), "_")
-                    ),
-                    Resource.GetValidFileNameToLower(G.Sys.GameManager_.Level_.Name_, "_")
+                    Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_, "_"),
+                    Resource.GetValidFileNameToLower(G.Sys.GameManager_.Mode_.GameModeID_.ToString (), "_")
                 );
+                _trackFolder = Path.Combine(_trackFolder, Resource.GetValidFileNameToLower(G.Sys.GameManager_.Level_.Name_, "_"));
+
                 _bestCheckpointTimes = ReadTimes("pb.txt");
                 if (_bestCheckpointTimes.ContainsKey(-1))
                     _bestTime = _bestCheckpointTimes[-1].Total;
@@ -87,8 +86,8 @@ namespace SplitTimes
             var now = new SplitTime(_previousCheckpointTimes.LastOrDefault(), Race.ElapsedTime, e.CheckpointIndex);
             _previousCheckpointTimes.Add(now);
 
-            if (_bestCheckpointTimes.ContainsKey (e.CheckpointIndex))
-                now.SetTimeBarText (_bestCheckpointTimes [e.CheckpointIndex], 1.25f);
+            if (_bestCheckpointTimes.ContainsKey(e.CheckpointIndex))
+                now.SetTimeBarText(_bestCheckpointTimes[e.CheckpointIndex], 1.25f);
             else
                 now.SetTimeBarText(1.25f);
 
@@ -182,9 +181,9 @@ namespace SplitTimes
                 PluginData.CreateDirectory(_trackFolder);
                 using (var sw = new StreamWriter(PluginData.CreateFile(Path.Combine(_trackFolder, filename))))
                 {
-                    for (int i = 0; i < _previousCheckpointTimes.Count; i++)
+                    foreach (SplitTime time in _previousCheckpointTimes)
                     {
-                        sw.WriteLine(_previousCheckpointTimes[i].RenderSave());
+                        sw.WriteLine(time.RenderSave());
                     }
                 }
             }
