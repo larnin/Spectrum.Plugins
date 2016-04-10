@@ -81,7 +81,7 @@ namespace SplitTimes
 
         private void LocalVehicle_CheckpointPassed(object sender, CheckpointHitEventArgs e)
         {
-            var now = new SplitTime(_previousCheckpointTimes.LastOrDefault(), Race.Elapsed(), e.CheckpointIndex);
+            var now = new SplitTime(_previousCheckpointTimes.LastOrDefault(), Race.ElapsedTime(), e.CheckpointIndex);
             _previousCheckpointTimes.Add(now);
 
             if (_bestCheckpointTimes.ContainsKey (e.CheckpointIndex))
@@ -99,7 +99,7 @@ namespace SplitTimes
             if (G.Sys.GameManager_.IsModeGo_ && !G.Sys.GameManager_.Paused_ && !G.Sys.PlayerManager_.Current_.inGameData_.Finished_)
             {
                 var times = GetTimeStrings();
-                times.Insert(0, new SplitTime(_previousCheckpointTimes.LastOrDefault(), Race.Elapsed(), 0).RenderHud());
+                times.Insert(0, new SplitTime(_previousCheckpointTimes.LastOrDefault(), Race.ElapsedTime(), 0).RenderHud());
                 times.Insert(0, "<size=57><color=#00000000>Regenerating</color></size>"); // Dummy placeholder to keep positioning
                 HudLinesDownward(2.5f, times);
             }
