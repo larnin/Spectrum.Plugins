@@ -1,9 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using System.Reflection;
 using Spectrum.API;
 using Spectrum.API.Game;
 using Spectrum.API.Game.Vehicle;
@@ -12,7 +11,6 @@ using Spectrum.API.Interfaces.Systems;
 using Spectrum.API.Configuration;
 using Spectrum.API.FileSystem;
 using Spectrum.API.Game.EventArgs.Vehicle;
-using UnityEngine;
 
 namespace SplitTimes
 {
@@ -23,7 +21,11 @@ namespace SplitTimes
         public string Contact => "jnvsor@gmail.com";
         public APILevel CompatibleAPILevel => APILevel.MicroWave;
 
-        private readonly List<TimeSpan> _previousCheckpointTimes = new List<TimeSpan>();
+        private readonly List<SplitTime> _previousCheckpointTimes = new List<SplitTime>();
+        private Dictionary<int, SplitTime> _bestCheckpointTimes;
+        private TimeSpan _bestTime = TimeSpan.Zero;
+        private string _trackFolder;
+
         private PluginData PluginData { get; set; }
         private Settings Settings { get; set; }
 
@@ -43,120 +45,150 @@ namespace SplitTimes
         private void Race_Started(object sender, EventArgs e)
         {
             _previousCheckpointTimes.Clear();
-            _previousCheckpointTimes.Add(TimeSpan.Zero);
+
+            if (Settings["SaveTimes"] == "true" && G.Sys.GameManager_.Mode_.GameModeID_ == GameModeID.Sprint)
+            {
+                _trackFolder = Path.Combine(
+                    Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_, "_"),
+                    Resource.GetValidFileNameToLower(G.Sys.GameManager_.Level_.Name_, "_")
+                );
+                _bestCheckpointTimes = ReadTimes("pb.txt");
+                if (_bestCheckpointTimes.ContainsKey(-1))
+                    _bestTime = _bestCheckpointTimes[-1].Total;
+            }
+            else
+                _bestCheckpointTimes = new Dictionary<int, SplitTime>();
         }
 
-        private void LocalVehicle_Finished (object sender, FinishedEventArgs e)
+        private void LocalVehicle_Finished(object sender, FinishedEventArgs e)
         {
             if (e.Type != RaceEndType.Finished)
                 return;
 
-            var finished = TimeSpan.FromMilliseconds(e.FinalTime);
+            var finished = new SplitTime(_previousCheckpointTimes.LastOrDefault(), TimeSpan.FromMilliseconds(e.FinalTime), -1);
+            _previousCheckpointTimes.Add(finished);
 
-            if (Settings["SaveTimes"] == "true")
+            if (Settings["SaveTimes"] == "true" && G.Sys.GameManager_.Mode_.GameModeID_ == GameModeID.Sprint)
             {
-                try
-                {
-                    var trackname = Regex.Replace(G.Sys.GameManager_.Level_.Name_, "[<>:\"/\\\\|?*_ ]+", "_");
-                    var filename = trackname + Path.DirectorySeparatorChar +
-                        $"{DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")}_" +
-                        $"{finished.Minutes:D2}-{finished.Seconds:D2}-{finished.Milliseconds.ToString("D3").Substring(0, 3)}.txt";
-
-                    PluginData.CreateDirectory(trackname);
-                    using (var sw = new StreamWriter(PluginData.CreateFile(filename)))
-                    {
-                        var now = finished - TimeSpan.FromMilliseconds(
-                            Math.Round(_previousCheckpointTimes[_previousCheckpointTimes.Count - 1].TotalMilliseconds / 10f) * 10f
-                        );
-                        sw.Write($"{finished.Minutes:D2}:{finished.Seconds:D2}.{finished.Milliseconds.ToString("D3").Substring(0, 3)}\t");
-                        sw.Write($"{now.Minutes:D2}:{now.Seconds:D2}.{now.Milliseconds.ToString("D3").Substring(0, 3)}");
-                        sw.WriteLine();
-
-                        for (int i = _previousCheckpointTimes.Count - 1; i > 0; i--)
-                        {
-                            now = _previousCheckpointTimes[i];
-                            sw.Write($"{now.Minutes:D2}:{now.Seconds:D2}.{Math.Round(now.Milliseconds / 10f).ToString("D2").Substring(0, 2)}\t");
-
-                            now -= _previousCheckpointTimes[i - 1];
-                            sw.Write($"{now.Minutes:D2}:{now.Seconds:D2}.{Math.Round(now.Milliseconds / 10f).ToString("D2").Substring(0, 2)}");
-
-                            sw.WriteLine();
-                        }
-                    }
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine($"SplitTimes: Couldn't save times. Exception below:\n{ex}");
-                }
+                if (_bestTime == TimeSpan.Zero || finished.Total < _bestTime)
+                    WriteTimes("pb.txt");
+                if (Settings["SaveAllTimes"] == "true")
+                    WriteTimes(finished.RenderFilename());
             }
 
-            _previousCheckpointTimes.Add(finished);
+            _previousCheckpointTimes.Clear();
         }
 
-        private void LocalVehicle_CheckpointPassed(object sender, EventArgs e)
+        private void LocalVehicle_CheckpointPassed(object sender, CheckpointHitEventArgs e)
         {
-            var now = Race.Elapsed();
+            var now = new SplitTime(_previousCheckpointTimes.LastOrDefault(), Race.Elapsed(), e.CheckpointIndex);
             _previousCheckpointTimes.Add(now);
 
-            LocalVehicle.Screen.SetTimeBarText($"{now.Minutes:D2}:{now.Seconds:D2}:{now.Milliseconds.ToString("D2").Substring(0, 2)}", "#0FA6D9", 1.25f);
+            if (_bestCheckpointTimes.ContainsKey (e.CheckpointIndex))
+                now.SetTimeBarText (_bestCheckpointTimes [e.CheckpointIndex], 1.25f);
+            else
+                now.SetTimeBarText(1.25f);
 
             var times = GetTimeStrings();
-
-            var output = new StringBuilder();
-            output.Append("<size=57><color=#6be584ff>Regenerating</color></size>");
-            output.AppendLine();
-            output.Append(String.Join(Environment.NewLine, times.ToArray()));
-            for (int i = 0; i < times.Count; i++)
-                output.Insert(0, Environment.NewLine);
-
-            LocalVehicle.HUD.Clear();
-            LocalVehicle.HUD.SetHUDText(output.ToString(), 2.0f);
+            times.Insert(0, "<size=57><color=#6be584ff>Regenerating</color></size>");
+            HudLinesDownward(2.0f, times);
         }
 
         private void SplitTimes_ShowPressed()
         {
-            if (Race.Elapsed() >= _previousCheckpointTimes.Last())
-                ShowTimes(2.5f);
+            if (G.Sys.GameManager_.IsModeGo_ && !G.Sys.GameManager_.Paused_ && !G.Sys.PlayerManager_.Current_.inGameData_.Finished_)
+            {
+                var times = GetTimeStrings();
+                times.Insert(0, new SplitTime(_previousCheckpointTimes.LastOrDefault(), Race.Elapsed(), 0).RenderHud());
+                times.Insert(0, "<size=57><color=#00000000>Regenerating</color></size>"); // Dummy placeholder to keep positioning
+                HudLinesDownward(2.5f, times);
+            }
         }
 
-        private void ShowTimes(float delay)
+        private void HudLinesDownward(float delay, List<string> lines)
         {
-            var times = GetTimeStrings();
-            times.Insert(0, GetTimeString(Race.Elapsed(), _previousCheckpointTimes.Last()));
-
             var output = new StringBuilder();
-            output.Append("<size=57><color=#00000000>Regenerating</color></size>"); // Dummy to keep it at the same height
-            output.AppendLine();
-            output.Append(String.Join(Environment.NewLine, times.ToArray()));
-            for (int i = 0; i < times.Count; i++)
+
+            output.Append(String.Join(Environment.NewLine, lines.ToArray()));
+            for (int i = 0; i < lines.Count; i++)
                 output.Insert(0, Environment.NewLine);
 
             LocalVehicle.HUD.Clear();
             LocalVehicle.HUD.SetHUDText(output.ToString(), delay);
-
         }
 
         private List<string> GetTimeStrings()
         {
-            var output = new List<string>();
+            var l = new List<string>();
 
-            for (int i = _previousCheckpointTimes.Count - 1; i > 0; i--)
-                output.Add(GetTimeString(_previousCheckpointTimes[i], _previousCheckpointTimes[i - 1]));
+            for (int i = _previousCheckpointTimes.Count; i > 0; i--)
+            {
+                var split = _previousCheckpointTimes[i - 1];
+                if (_bestCheckpointTimes.ContainsKey(split.CheckpointId))
+                    l.Add(split.RenderHud(_bestCheckpointTimes[split.CheckpointId]));
+                else
+                    l.Add(split.RenderHud());
+            }
+
+            return l;
+        }
+
+        private Dictionary<int, SplitTime> ReadTimes(string filename)
+        {
+            var output = new Dictionary<int, SplitTime>();
+
+            try
+            {
+                if (File.Exists(Path.Combine(PluginData.DirectoryPath, Path.Combine(_trackFolder, filename))))
+                {
+                    using (var sr = new StreamReader(Path.Combine(PluginData.DirectoryPath, Path.Combine(_trackFolder, filename))))
+                    {
+                        string[] line;
+                        var total = TimeSpan.Zero;
+                        var split = TimeSpan.Zero;
+                        var checkpoint = -1;
+                        var oldCheckpoint = -1;
+
+                        while ((line = sr.ReadLine()?.Split('\t')) != null)
+                        {
+                            total = TimeSpan.Parse("00:" + line[0]);
+                            split = TimeSpan.Parse("00:" + line[1]);
+                            checkpoint = -1;
+                            if (line.Length == 3)
+                                checkpoint = int.Parse(line[2]);
+
+                            output[checkpoint] = new SplitTime(total - split, total, checkpoint, oldCheckpoint);
+
+                            oldCheckpoint = checkpoint;
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"SplitTimes: Couldn't load times. Exception below:\n{ex}");
+            }
 
             return output;
         }
 
-        private string GetTimeString(TimeSpan now, TimeSpan last)
+        private void WriteTimes(string filename)
         {
-            var diff = now - last;
-
-            return $"<size=25>{now.Minutes:D2}:{now.Seconds:D2}.{now.Milliseconds.ToString("D3").Substring(0, 3)}</size>" +
-                "  " +
-                $"{diff.Minutes:D2}:{diff.Seconds:D2}.{diff.Milliseconds.ToString("D3").Substring(0, 3)}";
-        }
-
-        public void Shutdown()
-        {
+            try
+            {
+                PluginData.CreateDirectory(_trackFolder);
+                using (var sw = new StreamWriter(PluginData.CreateFile(Path.Combine(_trackFolder, filename))))
+                {
+                    for (int i = 0; i < _previousCheckpointTimes.Count; i++)
+                    {
+                        sw.WriteLine(_previousCheckpointTimes[i].RenderSave());
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"SplitTimes: Couldn't save times. Exception below:\n{ex}");
+            }
         }
 
         private void ValidateSettings()
@@ -165,9 +197,16 @@ namespace SplitTimes
                 Settings["ShowTimesHotkey"] = "LeftControl+X";
 
             if (Settings["SaveTimes"] == string.Empty)
-                Settings["SaveTimes"] = "false";
+                Settings["SaveTimes"] = "true";
+
+            if (Settings["SaveAllTimes"] == string.Empty)
+                Settings["SaveAllTimes"] = "false";
 
             Settings.Save();
+        }
+
+        public void Shutdown()
+        {
         }
     }
 }
