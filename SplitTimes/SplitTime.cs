@@ -72,7 +72,7 @@ namespace SplitTimes
 
         private string Render(TimeSpan time, int decPlaces = 3, char milSep = '.', char minSep = ':')
         {
-            return $"{time.Minutes:D2}{minSep}{time.Seconds:D2}{milSep}{time.Milliseconds.ToString("D" + decPlaces).Substring(0, decPlaces)}";
+            return $"{time.Minutes:D2}{minSep}{time.Seconds:D2}{milSep}{time.Milliseconds.ToString("D3").Substring(0, decPlaces)}";
         }
 
         public void SetTimeBarText(float delay)
