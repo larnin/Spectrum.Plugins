@@ -45,15 +45,12 @@ namespace SplitTimes
         private void Race_Started(object sender, EventArgs e)
         {
             _previousCheckpointTimes.Clear();
-            _bestCheckpointTimes = new Dictionary<int, SplitTime>();
+            _bestCheckpointTimes?.Clear();
             _bestTime = TimeSpan.Zero;
 
-            if (Settings["SaveTimes"] == "true")
-            {
-                _trackFolder = Path.Combine(
-                    Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_, "_"),
-                    Resource.GetValidFileNameToLower(G.Sys.GameManager_.Mode_.GameModeID_.ToString (), "_")
-                );
+            if (Settings ["SaveTimes"] == "true") {
+                _trackFolder = Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_, "_");
+                _trackFolder = Path.Combine(_trackFolder, Resource.GetValidFileNameToLower(G.Sys.GameManager_.Mode_.GameModeID_.ToString(), "_"));
                 _trackFolder = Path.Combine(_trackFolder, Resource.GetValidFileNameToLower(G.Sys.GameManager_.Level_.Name_, "_"));
 
                 _bestCheckpointTimes = ReadTimes("pb.txt");
@@ -77,8 +74,6 @@ namespace SplitTimes
                 if (Settings["SaveAllTimes"] == "true")
                     WriteTimes(finished.RenderFilename());
             }
-
-            _previousCheckpointTimes.Clear();
         }
 
         private void LocalVehicle_CheckpointPassed(object sender, CheckpointHitEventArgs e)
@@ -111,7 +106,7 @@ namespace SplitTimes
         {
             var output = new StringBuilder();
 
-            output.Append(String.Join(Environment.NewLine, lines.ToArray()));
+            output.Append(string.Join(Environment.NewLine, lines.ToArray()));
             for (int i = 0; i < lines.Count; i++)
                 output.Insert(0, Environment.NewLine);
 
