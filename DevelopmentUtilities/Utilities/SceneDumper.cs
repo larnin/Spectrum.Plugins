@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Spectrum.API.FileSystem;
+using Spectrum.API;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
@@ -10,11 +10,11 @@ namespace DevelopmentUtilities.Utilities
 {
     internal class SceneDumper
     {
-        private PluginData PluginData { get; }
+        private FileSystem FileSystem { get; }
 
-        internal SceneDumper(PluginData pluginData)
+        internal SceneDumper(FileSystem fileSystem)
         {
-            PluginData = pluginData;
+            FileSystem = fileSystem;
         }
 
         public void DumpCurrentScene(bool detailed)
@@ -29,7 +29,7 @@ namespace DevelopmentUtilities.Utilities
                     validGameObjects.Add(gameObject);
             }
 
-            using (var sw = new StreamWriter(PluginData.CreateFile(currentSceneName)))
+            using (var sw = new StreamWriter(FileSystem.CreateFile(currentSceneName)))
             {
                 foreach (var gameObject in validGameObjects)
                 {

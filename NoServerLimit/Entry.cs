@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Spectrum.API;
 using Spectrum.API.Configuration;
 using Spectrum.API.Game;
@@ -15,7 +14,7 @@ namespace NoServerLimit
         public string FriendlyName => "Server Limit Unlocker";
         public string Author => "Ciastex";
         public string Contact => "ciastexx@live.com";
-        public APILevel CompatibleAPILevel => APILevel.MicroWave;
+        public APILevel CompatibleAPILevel => APILevel.InfraRed;
 
         private Settings _settings;
 
@@ -68,7 +67,7 @@ namespace NoServerLimit
 
                         if (value > _settings.GetValue<int>("MaxPlayerCount"))
                         {
-                            properInput.value = _settings["MaxPlayerCount"];
+                            properInput.value = _settings.GetValue<int>("MaxPlayerCount").ToString();
                             return;
                         }
 
@@ -109,9 +108,9 @@ namespace NoServerLimit
 
         private void ValidateSettings()
         {
-            if (_settings["MaxPlayerCount"] == "")
+            if (!_settings.ValueExists("MaxPlayerCount"))
             {
-                _settings["MaxPlayerCount"] = "32";
+                _settings["MaxPlayerCount"] = 32;
             }
 
             _settings.Save();

@@ -9,7 +9,6 @@ using Spectrum.API.Game.Vehicle;
 using Spectrum.API.Interfaces.Plugins;
 using Spectrum.API.Interfaces.Systems;
 using Spectrum.API.Configuration;
-using Spectrum.API.FileSystem;
 using Spectrum.API.Game.EventArgs.Vehicle;
 
 namespace SplitTimes
@@ -26,7 +25,7 @@ namespace SplitTimes
         private TimeSpan _bestTime = TimeSpan.Zero;
         private string _trackFolder;
 
-        private PluginData PluginData { get; set; }
+        private FileSystem FileSystem { get; set; }
         private Settings Settings { get; set; }
 
         public void Initialize(IManager manager)
@@ -35,11 +34,11 @@ namespace SplitTimes
             LocalVehicle.Finished += LocalVehicle_Finished;
             Race.Started += Race_Started;
 
-            PluginData = new PluginData(typeof(Entry));
+            FileSystem = new FileSystem(typeof(Entry));
             Settings = new Settings(typeof(Entry));
             ValidateSettings();
 
-            manager.Hotkeys.Bind(Settings["ShowTimesHotkey"], SplitTimes_ShowPressed, false);
+            manager.Hotkeys.Bind(Settings["ShowTimesHotkey"] as string, SplitTimes_ShowPressed, false);
         }
 
         private void Race_Started(object sender, EventArgs e)
@@ -48,13 +47,13 @@ namespace SplitTimes
             _bestCheckpointTimes = new Dictionary<int, SplitTime>();
             _bestTime = TimeSpan.Zero;
 
-            if (Settings["SaveTimes"] == "true")
+            if ((bool)Settings["SaveTimes"])
             {
                 _trackFolder = Path.Combine(
-                    Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_, "_"),
-                    Resource.GetValidFileNameToLower(G.Sys.GameManager_.Mode_.GameModeID_.ToString (), "_")
+                    Resource.GetValidFileNameToLower(G.Sys.PlayerManager_.Current_.profile_.Name_),
+                    Resource.GetValidFileNameToLower(G.Sys.GameManager_.Mode_.GameModeID_.ToString ())
                 );
-                _trackFolder = Path.Combine(_trackFolder, Resource.GetValidFileNameToLower(G.Sys.GameManager_.Level_.Name_, "_"));
+                _trackFolder = Path.Combine(_trackFolder, Resource.GetValidFileNameToLower(G.Sys.GameManager_.Level_.Name_));
 
                 _bestCheckpointTimes = ReadTimes("pb.txt");
                 if (_bestCheckpointTimes.ContainsKey(-1))
@@ -70,11 +69,11 @@ namespace SplitTimes
             var finished = new SplitTime(_previousCheckpointTimes.LastOrDefault(), TimeSpan.FromMilliseconds(e.FinalTime), -1);
             _previousCheckpointTimes.Add(finished);
 
-            if (Settings["SaveTimes"] == "true")
+            if ((bool)Settings["SaveTimes"])
             {
                 if (_bestTime == TimeSpan.Zero || finished.Total < _bestTime)
                     WriteTimes("pb.txt");
-                if (Settings["SaveAllTimes"] == "true")
+                if ((bool)Settings["SaveAllTimes"])
                     WriteTimes(finished.RenderFilename());
             }
 
@@ -111,7 +110,7 @@ namespace SplitTimes
         {
             var output = new StringBuilder();
 
-            output.Append(String.Join(Environment.NewLine, lines.ToArray()));
+            output.Append(string.Join(Environment.NewLine, lines.ToArray()));
             for (int i = 0; i < lines.Count; i++)
                 output.Insert(0, Environment.NewLine);
 
@@ -141,21 +140,18 @@ namespace SplitTimes
 
             try
             {
-                if (File.Exists(Path.Combine(PluginData.DirectoryPath, Path.Combine(_trackFolder, filename))))
+                if (File.Exists(Path.Combine(FileSystem.DirectoryPath, Path.Combine(_trackFolder, filename))))
                 {
-                    using (var sr = new StreamReader(Path.Combine(PluginData.DirectoryPath, Path.Combine(_trackFolder, filename))))
+                    using (var sr = new StreamReader(Path.Combine(FileSystem.DirectoryPath, Path.Combine(_trackFolder, filename))))
                     {
                         string[] line;
-                        var total = TimeSpan.Zero;
-                        var split = TimeSpan.Zero;
-                        var checkpoint = -1;
                         var oldCheckpoint = -1;
 
                         while ((line = sr.ReadLine()?.Split('\t')) != null)
                         {
-                            total = TimeSpan.Parse("00:" + line[0]);
-                            split = TimeSpan.Parse("00:" + line[1]);
-                            checkpoint = -1;
+                            var total = TimeSpan.Parse("00:" + line[0]);
+                            var split = TimeSpan.Parse("00:" + line[1]);
+                            var checkpoint = -1;
                             if (line.Length == 3)
                                 checkpoint = int.Parse(line[2]);
 
@@ -178,8 +174,8 @@ namespace SplitTimes
         {
             try
             {
-                PluginData.CreateDirectory(_trackFolder);
-                using (var sw = new StreamWriter(PluginData.CreateFile(Path.Combine(_trackFolder, filename))))
+                FileSystem.CreateDirectory(_trackFolder);
+                using (var sw = new StreamWriter(FileSystem.CreateFile(Path.Combine(_trackFolder, filename))))
                 {
                     foreach (SplitTime time in _previousCheckpointTimes)
                     {
@@ -195,14 +191,14 @@ namespace SplitTimes
 
         private void ValidateSettings()
         {
-            if (Settings["ShowTimesHotkey"] == string.Empty)
+            if (!Settings.ValueExists("ShowTimesHotkey"))
                 Settings["ShowTimesHotkey"] = "LeftControl+X";
 
-            if (Settings["SaveTimes"] == string.Empty)
-                Settings["SaveTimes"] = "true";
+            if (!Settings.ValueExists("SaveTimes"))
+                Settings["SaveTimes"] = true;
 
-            if (Settings["SaveAllTimes"] == string.Empty)
-                Settings["SaveAllTimes"] = "false";
+            if (!Settings.ValueExists("SaveAllTimes"))
+                Settings["SaveAllTimes"] = false;
 
             Settings.Save();
         }
