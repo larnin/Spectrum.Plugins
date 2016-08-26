@@ -21,7 +21,7 @@ namespace MusicSwitcher
             _settings = new Settings(typeof(Entry));
             ValidateSettings();
 
-            manager.Hotkeys.Bind(_settings["RepeatToggleHotkey"], () =>
+            manager.Hotkeys.Bind(_settings["RepeatToggleHotkey"] as string, () =>
             {
                 if (Audio.CustomMusicEnabled)
                 {
@@ -36,7 +36,7 @@ namespace MusicSwitcher
                 }
             });
 
-            manager.Hotkeys.Bind(_settings["ShuffleToggleHotkey"], () =>
+            manager.Hotkeys.Bind(_settings["ShuffleToggleHotkey"] as string, () =>
             {
                 if (Audio.CustomMusicEnabled)
                 {
@@ -51,7 +51,7 @@ namespace MusicSwitcher
                 }
             });
 
-            manager.Hotkeys.Bind(_settings["NextMusicTrackHotkey"], () =>
+            manager.Hotkeys.Bind(_settings["NextMusicTrackHotkey"] as string, () =>
             {
                 if (Audio.CustomMusicEnabled)
                 {
@@ -63,7 +63,7 @@ namespace MusicSwitcher
                 }
             });
 
-            manager.Hotkeys.Bind(_settings["PrevMusicTrackHotkey"], () =>
+            manager.Hotkeys.Bind(_settings["PrevMusicTrackHotkey"] as string, () =>
             {
                 if (Audio.CustomMusicEnabled)
                 {
@@ -75,7 +75,7 @@ namespace MusicSwitcher
                 }
             });
 
-            manager.Hotkeys.Bind(_settings["ToggleMP3MusicHotkey"], () =>
+            manager.Hotkeys.Bind(_settings["ToggleMP3MusicHotkey"] as string, () =>
             {
                 Audio.CustomMusicEnabled = !Audio.CustomMusicEnabled;
 
@@ -99,27 +99,27 @@ namespace MusicSwitcher
 
         private void ValidateSettings()
         {
-            if (_settings["RepeatToggleHotkey"] == string.Empty)
+            if (!_settings.ValueExists("RepeatToggleHotkey"))
             {
                 _settings["RepeatToggleHotkey"] = "X+Backslash";
             }
 
-            if (_settings["ShuffleToggleHotkey"] == string.Empty)
+            if (!_settings.ValueExists("ShuffleToggleHotkey"))
             {
                 _settings["ShuffleToggleHotkey"] = "X+Quote";
             }
 
-            if (_settings["NextMusicTrackHotkey"] == string.Empty)
+            if (!_settings.ValueExists("NextMusicTrackHotkey"))
             {
                 _settings["NextMusicTrackHotkey"] = "X+RightBracket";
             }
 
-            if (_settings["PrevMusicTrackHotkey"] == string.Empty)
+            if (!_settings.ValueExists("PrevMusicTrackHotkey"))
             {
                 _settings["PrevMusicTrackHotkey"] = "X+LeftBracket";
             }
 
-            if (_settings["ToggleMP3MusicHotkey"] == string.Empty)
+            if (!_settings.ValueExists("ToggleMP3MusicHotkey"))
             {
                 _settings["ToggleMP3MusicHotkey"] = "X+Semicolon";
             }

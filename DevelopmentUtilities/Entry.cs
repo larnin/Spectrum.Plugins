@@ -2,7 +2,6 @@ using System;
 using DevelopmentUtilities.Utilities;
 using Spectrum.API;
 using Spectrum.API.Configuration;
-using Spectrum.API.FileSystem;
 using Spectrum.API.Game.Network;
 using Spectrum.API.Game.Vehicle;
 using Spectrum.API.Interfaces.Plugins;
@@ -15,9 +14,9 @@ namespace DevelopmentUtilities
         public string FriendlyName => "Development Utilities";
         public string Author => "Ciastex";
         public string Contact => "ciastexx@live.com";
-        public APILevel CompatibleAPILevel => APILevel.MicroWave;
+        public  APILevel CompatibleAPILevel => APILevel.InfraRed;
 
-        private PluginData PluginData { get; set; }
+        private FileSystem FileSystem { get; set; }
         private Settings Settings { get; set; }
 
         private SceneDumper SceneDumper { get; set; }
@@ -27,16 +26,16 @@ namespace DevelopmentUtilities
             Settings = new Settings(typeof(Entry));
             ValidateSettings();
 
-            PluginData = new PluginData(typeof(Entry));
+            FileSystem = new FileSystem(typeof(Entry));
 
-            SceneDumper = new SceneDumper(PluginData);
+            SceneDumper = new SceneDumper(FileSystem);
 
-            manager.Hotkeys.Bind(Settings["SceneDumperBriefHotkey"], () =>
+            manager.Hotkeys.Bind(Settings["SceneDumperBriefHotkey"] as string, () =>
             {
                 SceneDumper.DumpCurrentScene(false);
             });
 
-            manager.Hotkeys.Bind(Settings["SceneDumperDetailedHotkey"], () =>
+            manager.Hotkeys.Bind(Settings["SceneDumperDetailedHotkey"] as string, () =>
             {
                 SceneDumper.DumpCurrentScene(true);
             });
